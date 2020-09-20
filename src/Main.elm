@@ -33,7 +33,14 @@ type alias Model =
 
 init : Model
 init =
-  Model 0 "{}"
+  Model 0 """
+  {
+    "something": "in the air",
+    
+    "tonight": "yeah,
+    "inval": 1
+  }
+  """
 
 -- UPDATE
 
@@ -63,6 +70,8 @@ view model =
     [ button [ onClick Decrement ] [ text "-" ]
     , span [] [ text (String.fromInt model.count) ]
     , button [ onClick Increment ] [ text "+" ]
-    , div [] [ textarea [rows 20, cols  80] [] ]
+    , div [] [ textarea [rows 20, cols  80] [text model.json] ]
     
     ]
+
+    -- TODO: json pretty formatting
