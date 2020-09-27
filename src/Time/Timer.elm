@@ -58,7 +58,7 @@ init _ =
 type TimerStatus 
                 = None 
                 | Adding MaybeIntInput
-                | Going
+                | Going Int --remaining seconds
 
 type alias MaybeIntInput = 
   { input: String
@@ -70,12 +70,11 @@ type alias MaybeIntInput =
 
 type Msg
   = Tick Time.Posix
+  | TimerTick Time.Posix
   | AdjustTimeZone Time.Zone
   | SetColor Color
   | ShowAddTimer String -- input
-  | StartTimerMin Int -- duration
-
-
+  | StartTimerMin (Maybe Int) -- duration
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -84,6 +83,13 @@ update msg model =
       ( { model | time = newTime }
       , Cmd.none
       )
+    
+    TimerTick _ -> case model.timerStatus of 
+      Going remainder -> (
+        {model | timerStatus = Going(remainder - 1)}
+        , Cmd.none
+        )
+      _ -> (model, Cmd.none)
 
     AdjustTimeZone newZone ->
       ( { model | zone = newZone }
@@ -97,7 +103,10 @@ update msg model =
 
     ShowAddTimer input -> ({model | timerStatus = Adding (MaybeIntInput input (String.toInt input))}, Cmd.none)
 
-    StartTimerMin minutes -> (model, Cmd.none)
+    StartTimerMin minutesMaybe ->
+      case minutesMaybe of
+        Nothing -> (model, Cmd.none)
+        Just minutes -> ({model | timerStatus = Going (minutes * 60)}, Cmd.none)
 
 
 
@@ -105,8 +114,10 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-  Time.every 1000 Tick
+subscriptions _ = Sub.batch [
+    Time.every 1000 Tick
+    , Time.every 1000 TimerTick
+  ]
 
 
 
@@ -142,10 +153,10 @@ timerControlView timerStatus =
     Adding maybeIntInput -> span [] [
                         input [size 2, maxlength 10, value maybeIntInput.input, onInput ShowAddTimer ] []
                         ,text " min "
-                        ,button [onClick (StartTimerMin 1)] [text("start")]
+                        ,button [disabled (maybeIntInput.maybeInt == Nothing), onClick (StartTimerMin maybeIntInput.maybeInt)] [text("start")]
                       ]
 
-    Going -> button [] [text "- timer"]
+    Going remainingSecs -> button [] [text (String.fromInt remainingSecs)]
 
 -- view hjelpers
 setColorButton: Color -> Html Msg
