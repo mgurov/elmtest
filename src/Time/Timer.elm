@@ -12,7 +12,7 @@ module Time.Timer exposing (..)
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick,onInput)
 import Task
 import Time
 import Json.Decode exposing (string)
@@ -46,16 +46,24 @@ type alias Model =
   { zone : Time.Zone
   , time : Time.Posix
   , color: Color
+  , timerStatus: TimerStatus
   }
-
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model Time.utc (Time.millisToPosix 0) Red
+  ( Model Time.utc (Time.millisToPosix 0) Red None
   , Task.perform AdjustTimeZone Time.here
   )
 
+type TimerStatus 
+                = None 
+                | Adding MaybeIntInput
+                | Going
 
+type alias MaybeIntInput = 
+  { input: String
+  , maybeInt: Maybe Int
+  }
 
 -- UPDATE
 
@@ -64,6 +72,8 @@ type Msg
   = Tick Time.Posix
   | AdjustTimeZone Time.Zone
   | SetColor Color
+  | ShowAddTimer String -- input
+  | StartTimerMin Int -- duration
 
 
 
@@ -84,6 +94,10 @@ update msg model =
       ( { model | color = color }
       , Cmd.none
       )
+
+    ShowAddTimer input -> ({model | timerStatus = Adding (MaybeIntInput input (String.toInt input))}, Cmd.none)
+
+    StartTimerMin minutes -> (model, Cmd.none)
 
 
 
@@ -116,9 +130,22 @@ view model =
       ,setColorButton Grey
     ],
     div [] [
-      button [] [text "+ timer"] 
+      timerControlView model.timerStatus
     ]
   ]
+
+timerControlView: TimerStatus -> Html Msg
+timerControlView timerStatus = 
+  case timerStatus of 
+    None -> button [onClick(ShowAddTimer "5")] [text "+ timer"]
+
+    Adding maybeIntInput -> span [] [
+                        input [size 2, maxlength 10, value maybeIntInput.input, onInput ShowAddTimer ] []
+                        ,text " min "
+                        ,button [onClick (StartTimerMin 1)] [text("start")]
+                      ]
+
+    Going -> button [] [text "- timer"]
 
 -- view hjelpers
 setColorButton: Color -> Html Msg
@@ -129,3 +156,5 @@ timePartToString part =
   part 
   |> String.fromInt
   |> String.pad 2 '0'    
+
+
