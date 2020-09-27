@@ -87,10 +87,13 @@ update msg model =
     
     TimerTick _ -> case model.timerStatus of 
       Going remainder -> 
-        (
-        {model | timerStatus = Going(remainder - (if remainder > 0 then 1 else 0))}
-        , Cmd.none
-        )
+        let
+           deduction = if remainder > 0 then 1 else 0
+        in
+          (
+          {model | timerStatus = Going(remainder - deduction)}
+          , Cmd.none
+          )
       _ -> (model, Cmd.none)
 
     ResetTimer -> ( { model | timerStatus = None }
