@@ -86,8 +86,9 @@ update msg model =
       )
     
     TimerTick _ -> case model.timerStatus of 
-      Going remainder -> (
-        {model | timerStatus = Going(remainder - 1)}
+      Going remainder -> 
+        (
+        {model | timerStatus = Going(remainder - (if remainder > 0 then 1 else 0))}
         , Cmd.none
         )
       _ -> (model, Cmd.none)
