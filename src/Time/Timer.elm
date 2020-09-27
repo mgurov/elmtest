@@ -75,6 +75,7 @@ type Msg
   | SetColor Color
   | ShowAddTimer String -- input
   | StartTimerMin (Maybe Int) -- duration
+  | ResetTimer
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -90,6 +91,11 @@ update msg model =
         , Cmd.none
         )
       _ -> (model, Cmd.none)
+
+    ResetTimer -> ( { model | timerStatus = None }
+      , Cmd.none
+      )
+
 
     AdjustTimeZone newZone ->
       ( { model | zone = newZone }
@@ -156,7 +162,7 @@ timerControlView timerStatus =
                         ,button [disabled (maybeIntInput.maybeInt == Nothing), onClick (StartTimerMin maybeIntInput.maybeInt)] [text("start")]
                       ]
 
-    Going remainingSecs -> button [] [text (String.fromInt remainingSecs)]
+    Going remainingSecs -> button [onClick(ResetTimer)] [text (String.fromInt remainingSecs)]
 
 -- view hjelpers
 setColorButton: Color -> Html Msg
