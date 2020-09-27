@@ -34,17 +34,24 @@ main =
 
 -- MODEL
 
+type Color = Red | Green | Grey
+
+colorString color = 
+  case color of 
+    Red -> "red"
+    Green -> "green"
+    Grey -> "grey"
 
 type alias Model =
   { zone : Time.Zone
   , time : Time.Posix
-  , color: String
+  , color: Color
   }
 
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model Time.utc (Time.millisToPosix 0) "red"
+  ( Model Time.utc (Time.millisToPosix 0) Red
   , Task.perform AdjustTimeZone Time.here
   )
 
@@ -56,7 +63,7 @@ init _ =
 type Msg
   = Tick Time.Posix
   | AdjustTimeZone Time.Zone
-  | SetColor String
+  | SetColor Color
 
 
 
@@ -84,7 +91,7 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
   Time.every 1000 Tick
 
 
@@ -100,21 +107,25 @@ view model =
     second = timePartToString (Time.toSecond model.zone model.time)
   in
   div [] [
-    h1 [style "color" model.color] [
+    h1 [style "color" (colorString model.color)] [
       text (hour ++ ":" ++ minute ++ ":" ++ second)
     ]
     , div [] [
-      setColorButton "green"
-      ,setColorButton "red"
-      ,setColorButton "grey"
+      setColorButton Green
+      ,setColorButton Red
+      ,setColorButton Grey
+    ],
+    div [] [
+      button [] [text "+ timer"] 
     ]
   ]
 
 -- view hjelpers
-setColorButton: String -> Html Msg
+setColorButton: Color -> Html Msg
 setColorButton color = 
-  button [onClick (SetColor color)] [text(color)]
+  button [onClick (SetColor color)] [text(colorString(color))]
 
 timePartToString part = 
-  String.pad 2 '0' (String.fromInt part)
-    
+  part 
+  |> String.fromInt
+  |> String.pad 2 '0'    
