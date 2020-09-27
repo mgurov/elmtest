@@ -95,9 +95,9 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
   let
-    hour   = String.fromInt (Time.toHour   model.zone model.time)
-    minute = String.fromInt (Time.toMinute model.zone model.time)
-    second = String.fromInt (Time.toSecond model.zone model.time)
+    hour   = timePartToString (Time.toHour   model.zone model.time)
+    minute = timePartToString (Time.toMinute model.zone model.time)
+    second = timePartToString (Time.toSecond model.zone model.time)
   in
   div [] [
     h1 [style "color" model.color] [
@@ -114,4 +114,7 @@ view model =
 setColorButton: String -> Html Msg
 setColorButton color = 
   button [onClick (SetColor color)] [text(color)]
+
+timePartToString part = 
+  String.pad 2 '0' (String.fromInt part)
     
