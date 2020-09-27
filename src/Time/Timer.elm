@@ -51,7 +51,7 @@ type alias Model =
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model Time.utc (Time.millisToPosix 0) Red None
+  ( Model Time.utc (Time.millisToPosix 0) Grey None
   , Task.perform AdjustTimeZone Time.here
   )
 
@@ -136,22 +136,35 @@ subscriptions _ = Sub.batch [
 
 view : Model -> Html Msg
 view model =
-  let
-    hour   = timePartToString (Time.toHour   model.zone model.time)
-    minute = timePartToString (Time.toMinute model.zone model.time)
-    second = timePartToString (Time.toSecond model.zone model.time)
-  in
   div [] [
-    h1 [style "color" (colorString model.color)] [
-      text (hour ++ ":" ++ minute ++ ":" ++ second)
+    case model.timerStatus of 
+      Going remainder -> 
+        let
+            seconds = modBy 60 remainder
+            minutes = remainder // 60
+        in
+        
+        h4 [style "color" (colorString model.color)] [
+          text (timePartToString minutes ++ ":" ++ timePartToString seconds)
+        ]
+      _ -> 
+        let
+          hour   = timePartToString (Time.toHour   model.zone model.time)
+          minute = timePartToString (Time.toMinute model.zone model.time)
+          second = timePartToString (Time.toSecond model.zone model.time)
+        in
+          h4 [style "color" (colorString model.color)] [
+            text (hour ++ ":" ++ minute ++ ":" ++ second)
+          ]
+    , hr [] []
+    ,div [] [
+      timerControlView model.timerStatus
     ]
     , div [] [
-      setColorButton Green
+      text "time color: "
+      ,setColorButton Green
       ,setColorButton Red
       ,setColorButton Grey
-    ],
-    div [] [
-      timerControlView model.timerStatus
     ]
   ]
 
@@ -166,12 +179,12 @@ timerControlView timerStatus =
                         ,button [disabled (maybeIntInput.maybeInt == Nothing), onClick (StartTimerMin maybeIntInput.maybeInt)] [text("start")]
                       ]
 
-    Going remainingSecs -> button [onClick(ResetTimer)] [text (String.fromInt remainingSecs)]
+    Going _ -> button [onClick ResetTimer] [text "reset timer"]
 
 -- view hjelpers
 setColorButton: Color -> Html Msg
 setColorButton color = 
-  button [onClick (SetColor color)] [text(colorString(color))]
+  button [onClick (SetColor color)] [text(colorString color)]
 
 timePartToString part = 
   part 
