@@ -136,7 +136,7 @@ subscriptions _ = Sub.batch [
 
 view : Model -> Html Msg
 view model =
-  div [] [
+  div [style "font-size" "24px"] [
     case model.timerStatus of 
       Going remainder -> 
         let
